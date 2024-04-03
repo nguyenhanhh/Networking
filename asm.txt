@@ -1,0 +1,235 @@
+﻿Sw Core
+Cấu hình cơ bản: 
++ Hostname
++ Các loại password
+=> Console password
+Bảo vệ Switch khi cắm dạy console
+
+line console 0
+password 123
+login
+
+=> Enable password
+Bảo Switch khi gõ lệnh enable
+
+enable secret admin
+
+=> VTY password
+Bảo vệ Switch khi kết nối từ xa vào S (telnet, ssh)
+
+line vty 0 4
+password cisco123
+login
+
+Cấu hình VTP
+
+vtp domain btec.vn
+vtp mode server
+vtp password btec123
+
+check: 
+do show vtp status
+do show vtp password
+
+Cấu hình trunking trên các cổng
+
+interface range f0/1-4
+sw trunk enc dot1q
+sw mode trunk
+
+show interface trunk
+
+Bật cấu hình switch layer 3 trên sw-core
+ip routing
+- Tạo vlans
+
+vlan 10
+name teacher
+
+vlan 20
+name SEO
+
+vlan 30
+name Head
+
+vlan 40
+name IT
+
+vlan 50
+name student
+
+vlan 100
+name Server
+
+show vlan brief
+
+
+-Đặt IP gateway cho từng vlan để routing các vlan
+
+interface vlan 10
+ip add 192.168.10.1 255.255.255.224
+no shutdown
+
+interface vlan 20
+ip add 192.168.20.1 255.255.255.240
+no shutdown
+
+interface vlan 30
+ip add 192.168.30.1 255.255.255.248
+no shutdown
+
+interface vlan 40
+ip add 192.168.40.1 255.255.255.248
+no shutdown
+
+interface vlan 50
+ip add 192.168.50.1 255.255.255.0 
+no shutdown
+
+interface vlan 100
+ip add 192.168.100.1 255.255.255.248
+no shutdown
+
+show ip int brief
+------------------------------------------------
+Sw Server, sw-staff, sw-student
+- Cấu hình password (tương tự như Sw-Core)
+- Cấu hình vtp
+vtp domain btec.vn
+vtp mode client
+vtp pass btec123
+
+int f0/1 
+sw mode trunk
+-------------------------------------------------
+Sw Server
+Gán vlan cho các cổng
+int range f0/2-4
+sw mode acc
+sw acc vlan 100
+-------------------------
+Sw-Staff
+Gán vlan cho các cổng
+
+int range f0/2-10
+sw mode acc
+sw acc vlan 10
+
+int range f0/11-15
+sw mode acc
+sw acc vlan 20
+
+int range f0/16-21
+sw mode acc
+sw acc vlan 30
+
+int range f0/22-24
+sw mode acc
+sw acc vlan 40
+-------------------------
+Sw-Student
+ena
+conf t
+int range f0/2-10
+sw mode acc
+sw acc vlan 50
+--------------------------
+Cấu hình DHCP
+Cấu hình ip helper trên sw-core
+int vlan 10
+ip helper-address  [IP-DHCP]
+
+int vlan 10
+ip helper-address 192.168.100.2
+int vlan 20
+ip helper-address 192.168.100.2
+int vlan 30
+ip helper-address 192.168.100.2
+int vlan 40
+ip helper-address 192.168.100.2
+int vlan 50
+ip helper-address 192.168.100.2
+-------------------------------
+Cấu hình DNS
+-------------------------------
+Cấu hình Wireless Router
+---------------------------
+Cấu hình ACL trên Sw-Core
+
+sw-core(config)#access-list 110 deny ip 192.168.50.0 0.0.0.255 192.168.10.0 0.0.0.31
+sw-core(config)#access-list 110 deny ip 192.168.50.0 0.0.0.255 192.168.20.0 0.0.0.15
+sw-core(config)#access-list 110 deny ip 192.168.50.0 0.0.0.255 192.168.30.0 0.0.0.7
+sw-core(config)#access-list 110 deny ip 192.168.50.0 0.0.0.255 192.168.40.0 0.0.0.7
+sw-core(config)#access-list 110 permit ip any any 
+
+sw-core(config)#interface vlan 50
+
+sw-core(config-if)#ip access-group 110 in
+
+Kêt quả: 
++ Trên PC của vlan 50:
+ping 192.168.10.0 => False
+ping 192.168.20.0 => False
+ping 192.168.30.0 => False
+ping 192.168.40.0 => False
++ Trên PC của VLAN 10, 20, 30, 40:
+ping 192.168.50.0 => Success
+
+--------------------------------------------------------------------------------------------
+Cấu hình routing on sw-core
+int g0/1
+no switchport
+ip add 10.10.12.1 255.255.255.252
+ip route 0.0.0.0 0.0.0.0 10.10.12.2
+-------------------------------------
+Cấu hình border router
+- Cấu hình password (tương tự như Sw-Core)
++ Cài địa chỉ IP cho interface g0/0
+int g0/0
+ip address 10.10.12.2 255.255.255.252
+no shutdown 
+
++ Cài địa chỉ IP cho interface g0/1
+int g0/1
+ip address 1.1.1.1 255.255.255.252
+no shutdown 
+
++ Cấu hình routing trên Border router
+ip route 192.168.0.0 255.255.0.0 10.10.12.1
+ip route 0.0.0.0 0.0.0.0 1.1.1.2
+---------------------------------------------
+Cấu hình isp router
++ Cài địa chỉ IP cho interface g0/0
+int g0/0
+ip add 1.1.1.2 255.255.255.252
+no sht
+
++ Cài địa chỉ IP cho interface g0/1
+int g0/1
+ip add 8.8.8.1 255.255.255.0
+no shut
+
++ Cấu hình routing trên ISP router
+ip route 0.0.0.0 0.0.0.0 1.1.1.1
+---------------------------------------------
+
+Cấu hình NAT trên Sw-core
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
